@@ -21,15 +21,14 @@ A modern, responsive financial transaction dashboard built for **Jago Bank** use
 
 ### Analytics
 - **Period Comparison** - Compare any two months side by side
-- **Budget Tracker** - Set budgets per category and track progress
-- **Savings Rate** - Calculate your savings percentage
+- **Savings Rate** - Calculate your savings percentage automatically
 
 ### Tools
 - **Privacy Mode** - Hide all monetary values with one click
-- **Export** - Export to CSV or PDF report
+- **Export** - Export to CSV, PDF report, or PNG image for social media
 - **Custom Categories** - Create rules to auto-categorize transactions
 - **Responsive Design** - Works on desktop and mobile
-- **Keyboard Shortcuts** - `Ctrl+K` Search, `Ctrl+E` Export, `Ctrl+H` Hide values
+- **Keyboard Shortcuts** - `Ctrl+K` Search, `Ctrl+U` Upload, `Ctrl+E` Export, `Ctrl+H` Hide values
 
 ---
 
@@ -76,7 +75,7 @@ bun run preview # or: npm run preview
 ## Usage
 
 1. Open the dashboard in your browser
-2. Upload your **Jago Bank transaction history PDF** or click "Try with sample data"
+2. Upload your **Jago Bank transaction history PDF** 
 3. Analyze your transactions!
 
 <img width="2559" height="1389" alt="image" src="https://github.com/user-attachments/assets/177424c9-698f-446d-a410-d3530b615094" />
@@ -112,8 +111,9 @@ src/
 ├── components/
 │   ├── ui/              # Reusable UI components
 │   ├── layout/          # Header, BottomNav
-│   ├── analytics/       # PeriodComparison, BudgetCard
-│   └── modals/          # Export, Upload, CategoryRules
+│   ├── analytics/       # PeriodComparison
+│   ├── export/          # ShareableCard for PNG export
+│   └── modals/          # Export, Upload, CategoryRules, etc.
 ├── hooks/               # Custom React hooks
 ├── utils/               # Data processing utilities
 └── context/             # React contexts
