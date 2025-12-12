@@ -1,0 +1,12 @@
+date,time,datetime,source_or_destination,transaction_detail,note,amount,balance,currency,transaction_id,is_reversal
+2024-01-15,10:30,2024-01-15 10:30,Gaji Bulanan,Transfer Masuk,Gaji Januari,5000000,5000000,IDR,TXN001,False
+2024-01-16,14:22,2024-01-16 14:22,Tokopedia,Pembayaran QRIS,Belanja online,-150000,4850000,IDR,TXN002,False
+2024-01-17,09:15,2024-01-17 09:15,GoFood,Pembayaran QRIS,Makan siang,-45000,4805000,IDR,TXN003,False
+2024-01-18,16:00,2024-01-18 16:00,PLN,Tagihan Listrik,Bayar listrik,-350000,4455000,IDR,TXN004,False
+2024-01-20,11:30,2024-01-20 11:30,Grab,Transport,Perjalanan kantor,-25000,4430000,IDR,TXN005,False
+2024-01-22,13:45,2024-01-22 13:45,Starbucks,Pembayaran QRIS,Kopi,-75000,4355000,IDR,TXN006,False
+2024-01-25,10:00,2024-01-25 10:00,Transfer dari Budi,Transfer Masuk,Bayar hutang,200000,4555000,IDR,TXN007,False
+2024-01-28,15:30,2024-01-28 15:30,Shopee,Pembayaran QRIS,Belanja bulanan,-280000,4275000,IDR,TXN008,False
+2024-02-01,09:00,2024-02-01 09:00,Gaji Bulanan,Transfer Masuk,Gaji Februari,5000000,9275000,IDR,TXN009,False
+2024-02-03,12:00,2024-02-03 12:00,Indomaret,Pembayaran QRIS,Groceries,-85000,9190000,IDR,TXN010,False
+

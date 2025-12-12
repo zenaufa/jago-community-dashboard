@@ -1,0 +1,64 @@
+{
+  "name": "jago-community-dashboard",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "A modern financial transaction dashboard for Jago Bank with beautiful visualizations and analytics",
+  "author": {
+    "name": "Linaqruf",
+    "url": "https://github.com/Linaqruf"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Linaqruf/jago-community-dashboard.git"
+  },
+  "homepage": "https://linaqruf.github.io/jago-community-dashboard",
+  "bugs": {
+    "url": "https://github.com/Linaqruf/jago-community-dashboard/issues"
+  },
+  "keywords": [
+    "jago",
+    "bank",
+    "financial",
+    "dashboard",
+    "react",
+    "vite",
+    "indonesia"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.13.13",
+    "date-fns": "^4.1.0",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.561.0",
+    "motion": "^12.23.26",
+    "papaparse": "^5.5.3",
+    "pdfjs-dist": "^5.4.449",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "recharts": "^3.5.1"
+  }
+}
