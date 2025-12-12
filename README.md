@@ -7,8 +7,6 @@
 
 A modern, responsive financial transaction dashboard built for **Jago Bank** users. Analyze your transactions with beautiful visualizations and insightful analytics.
 
-**Created by [Linaqruf (Furqanil Taqwa)](https://github.com/Linaqruf)**
-
 ---
 
 ## Features
