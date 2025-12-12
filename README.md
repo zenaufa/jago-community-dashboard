@@ -7,6 +7,8 @@
 
 A modern, responsive financial transaction dashboard built for **Jago Bank** users. Analyze your transactions with beautiful visualizations and insightful analytics.
 
+<img width="2559" height="1399" alt="image" src="https://github.com/user-attachments/assets/ad499ffd-4564-4508-97b3-2e01e7ad60c6" />
+
 ---
 
 ## Features
@@ -76,6 +78,8 @@ bun run preview # or: npm run preview
 1. Open the dashboard in your browser
 2. Upload your **Jago Bank transaction history PDF** or click "Try with sample data"
 3. Analyze your transactions!
+
+<img width="2559" height="1389" alt="image" src="https://github.com/user-attachments/assets/177424c9-698f-446d-a410-d3530b615094" />
 
 ### How to Export from Jago App
 
