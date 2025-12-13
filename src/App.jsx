@@ -1,11 +1,12 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTransactionData } from './hooks/useTransactionData';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useTheme } from './context/ThemeContext';
 import { useLanguage } from './context/LanguageContext';
+import { Sidebar } from './components/layout/Sidebar';
+import { MobileMenu } from './components/layout/MobileMenu';
 import { Header } from './components/layout/Header';
-import { BottomNav } from './components/layout/BottomNav';
 import { SummaryCards } from './components/SummaryCards';
 import { TrendChart } from './components/TrendChart';
 import { CategoryBreakdown } from './components/CategoryBreakdown';
@@ -45,12 +46,39 @@ const itemVariants = {
   },
 };
 
+// Custom hook for localStorage persistence
+function useLocalStorageState(key, defaultValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved !== null ? JSON.parse(saved) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [key, state]);
+
+  return [state, setState];
+}
+
 function App() {
   const [isHidden, setIsHidden] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [categoryRulesModalOpen, setCategoryRulesModalOpen] = useState(false);
   const [confirmClearModalOpen, setConfirmClearModalOpen] = useState(false);
+  
+  // Sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorageState('sidebar-collapsed', false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const chartRef = useRef(null);
   const { showToast } = useToast();
   const { isDark } = useTheme();
@@ -83,7 +111,7 @@ function App() {
   } = useTransactionData();
 
   // Keyboard shortcuts
-  const anyModalOpen = exportModalOpen || uploadModalOpen || categoryRulesModalOpen || confirmClearModalOpen;
+  const anyModalOpen = exportModalOpen || uploadModalOpen || categoryRulesModalOpen || confirmClearModalOpen || mobileMenuOpen;
   
   const shortcuts = useMemo(() => ({
     'mod+k': () => {
@@ -113,13 +141,18 @@ function App() {
         duration: 1500 
       });
     },
+    'mod+b': () => {
+      // Toggle sidebar on desktop
+      setSidebarCollapsed(prev => !prev);
+    },
     'escape': () => {
+      if (mobileMenuOpen) setMobileMenuOpen(false);
       if (exportModalOpen) setExportModalOpen(false);
       if (uploadModalOpen) setUploadModalOpen(false);
       if (categoryRulesModalOpen) setCategoryRulesModalOpen(false);
       if (confirmClearModalOpen) setConfirmClearModalOpen(false);
     },
-  }), [anyModalOpen, isHidden, showToast, exportModalOpen, uploadModalOpen, categoryRulesModalOpen, confirmClearModalOpen, hasData, t]);
+  }), [anyModalOpen, isHidden, showToast, exportModalOpen, uploadModalOpen, categoryRulesModalOpen, confirmClearModalOpen, mobileMenuOpen, hasData, t, setSidebarCollapsed]);
 
   useKeyboardShortcuts(shortcuts, !loading);
 
@@ -140,6 +173,9 @@ function App() {
     showToast({ message: t('common.dataCleared'), type: 'info' });
   };
 
+  // Sidebar width for content offset
+  const sidebarWidth = sidebarCollapsed ? 72 : 260;
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -147,9 +183,36 @@ function App() {
   // Show empty state if no data
   if (!hasData) {
     return (
-      <EmptyState 
-        onUpload={handleFileUpload}
-      />
+      <>
+        <EmptyState 
+          onUpload={handleFileUpload}
+        />
+        {/* Mobile Menu for empty state */}
+        <MobileMenu
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          filters={filters}
+          updateFilters={updateFilters}
+          resetFilters={resetFilters}
+          dateRange={dateRange}
+          transactionTypes={transactionTypes}
+          hasData={false}
+          onUpload={() => setUploadModalOpen(true)}
+          onExport={null}
+          onClear={null}
+        />
+        <UploadModal
+          isOpen={uploadModalOpen}
+          onClose={() => setUploadModalOpen(false)}
+          onUpload={async (csvText) => {
+            const blob = new Blob([csvText], { type: 'text/csv' });
+            const file = new File([blob], 'uploaded.csv', { type: 'text/csv' });
+            await loadFromFile(file);
+            showToast({ message: t('common.dataLoaded'), type: 'success' });
+            setUploadModalOpen(false);
+          }}
+        />
+      </>
     );
   }
 
@@ -184,7 +247,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 theme-transition" style={{ backgroundColor: bgPrimary }}>
+    <div className="min-h-screen theme-transition" style={{ backgroundColor: bgPrimary }}>
       {/* Background Pattern */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl" 
@@ -206,132 +269,171 @@ function App() {
         />
       </div>
 
-      {/* Content */}
+      {/* Desktop Sidebar */}
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        filters={filters}
+        updateFilters={updateFilters}
+        resetFilters={resetFilters}
+        dateRange={dateRange}
+        transactionTypes={transactionTypes}
+        hasData={hasData}
+        onUpload={() => setUploadModalOpen(true)}
+        onExport={() => setExportModalOpen(true)}
+        onClear={handleClearDataClick}
+      />
+
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        filters={filters}
+        updateFilters={updateFilters}
+        resetFilters={resetFilters}
+        dateRange={dateRange}
+        transactionTypes={transactionTypes}
+        hasData={hasData}
+        onUpload={() => setUploadModalOpen(true)}
+        onExport={() => setExportModalOpen(true)}
+        onClear={handleClearDataClick}
+      />
+
+      {/* Main Content Area */}
       <div className="relative z-10">
-        <Header 
-          filters={filters}
-          updateFilters={updateFilters}
-          resetFilters={resetFilters}
-          dateRange={dateRange}
-          transactionTypes={transactionTypes}
-          transactions={transactions}
-          hasData={hasData}
-          onUpload={() => setUploadModalOpen(true)}
-          onExport={() => setExportModalOpen(true)}
-          onClear={handleClearDataClick}
-        />
+        {/* Dynamic sidebar offset styles */}
+        <style>{`
+          @media (min-width: 1024px) {
+            .main-content-wrapper {
+              margin-left: ${sidebarWidth}px;
+              transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+          }
+          @media (max-width: 1023px) {
+            .main-content-wrapper {
+              margin-left: 0 !important;
+            }
+          }
+        `}</style>
+        
+        <div className="main-content-wrapper">
+          {/* Compact Header with Search */}
+          <Header 
+            filters={filters}
+            updateFilters={updateFilters}
+            resetFilters={resetFilters}
+            transactions={transactions}
+            hasData={hasData}
+            onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          />
 
-        <motion.main 
-          className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Summary Cards */}
-          <motion.section variants={itemVariants}>
-            <SummaryCards 
-              summary={summary} 
-              isHidden={isHidden}
-              onToggleHidden={() => setIsHidden(!isHidden)}
-            />
-          </motion.section>
-
-          {/* Trend Chart */}
-          <motion.section variants={itemVariants}>
-            <div ref={chartRef}>
-              <TrendChart 
-                data={monthlyTrend} 
-                searchKeyword={filters.searchTerm}
-                summary={summary}
+          <motion.main 
+            className="px-4 md:px-6 py-6 space-y-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Summary Cards */}
+            <motion.section variants={itemVariants} data-section="overview">
+              <SummaryCards 
+                summary={summary} 
                 isHidden={isHidden}
-                skipEmptyPeriods={filters.skipEmptyPeriods}
-                onToggleSkipEmpty={() => updateFilters({ skipEmptyPeriods: !filters.skipEmptyPeriods })}
+                onToggleHidden={() => setIsHidden(!isHidden)}
               />
-            </div>
-          </motion.section>
+            </motion.section>
 
-          {/* Analytics Row */}
-          <motion.section variants={itemVariants}>
-            <PeriodComparison 
-              transactions={transactions}
-              isHidden={isHidden}
-            />
-          </motion.section>
+            {/* Trend Chart */}
+            <motion.section variants={itemVariants} data-section="chart">
+              <div ref={chartRef}>
+                <TrendChart 
+                  data={monthlyTrend} 
+                  searchKeyword={filters.searchTerm}
+                  summary={summary}
+                  isHidden={isHidden}
+                  skipEmptyPeriods={filters.skipEmptyPeriods}
+                  onToggleSkipEmpty={() => updateFilters({ skipEmptyPeriods: !filters.skipEmptyPeriods })}
+                />
+              </div>
+            </motion.section>
 
-          {/* Category Breakdown */}
-          <motion.section variants={itemVariants}>
-            <CategoryBreakdown 
-              categoryData={categoryBreakdown}
-              topMerchants={topMerchants}
-              allMerchants={allMerchants}
-              isHidden={isHidden}
-              onOpenCategoryRules={() => setCategoryRulesModalOpen(true)}
-              onSelectMerchant={(merchantName) => {
-                updateFilters({ searchTerm: merchantName });
-                // Scroll to transaction table
-                setTimeout(() => {
-                  const tableSection = document.querySelector('[data-section="transactions"]');
-                  tableSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-                showToast({ 
-                  message: `${t('footer.search')}: ${merchantName}`, 
-                  type: 'info', 
-                  duration: 2000 
-                });
-              }}
-            />
-          </motion.section>
+            {/* Analytics Row */}
+            <motion.section variants={itemVariants} data-section="analytics">
+              <PeriodComparison 
+                transactions={transactions}
+                isHidden={isHidden}
+              />
+            </motion.section>
 
-          {/* Transaction Table */}
-          <motion.section variants={itemVariants} data-section="transactions">
-            <TransactionTable transactions={transactions} isHidden={isHidden} />
-          </motion.section>
-        </motion.main>
+            {/* Category Breakdown */}
+            <motion.section variants={itemVariants} data-section="categories">
+              <CategoryBreakdown 
+                categoryData={categoryBreakdown}
+                topMerchants={topMerchants}
+                allMerchants={allMerchants}
+                isHidden={isHidden}
+                onOpenCategoryRules={() => setCategoryRulesModalOpen(true)}
+                onSelectMerchant={(merchantName) => {
+                  updateFilters({ searchTerm: merchantName });
+                  // Scroll to transaction table
+                  setTimeout(() => {
+                    const tableSection = document.querySelector('[data-section="transactions"]');
+                    tableSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                  showToast({ 
+                    message: `${t('footer.search')}: ${merchantName}`, 
+                    type: 'info', 
+                    duration: 2000 
+                  });
+                }}
+              />
+            </motion.section>
 
-        {/* Footer - Hidden on mobile */}
-        <footer className="hidden md:block mt-8 theme-transition" style={{ borderTop: `1px solid ${borderColor}` }}>
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                     style={{ background: `linear-gradient(135deg, ${accentColor} 0%, ${isDark ? '#e6cf00' : '#a16207'} 100%)` }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: isDark ? '#0f0f0f' : '#ffffff' }}>
-                    <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 22V12" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 12L2 7" stroke="currentColor" strokeWidth="2"/>
-                    <path d="M12 12L22 7" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
+            {/* Transaction Table */}
+            <motion.section variants={itemVariants} data-section="transactions">
+              <TransactionTable transactions={transactions} isHidden={isHidden} />
+            </motion.section>
+          </motion.main>
+
+          {/* Footer */}
+          <footer className="mt-8 theme-transition" style={{ borderTop: `1px solid ${borderColor}` }}>
+            <div className="px-4 md:px-6 py-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                       style={{ background: `linear-gradient(135deg, ${accentColor} 0%, ${isDark ? '#e6cf00' : '#a16207'} 100%)` }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: isDark ? '#0f0f0f' : '#ffffff' }}>
+                      <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M12 22V12" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M12 12L2 7" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M12 12L22 7" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="text-sm" style={{ color: accentColor }}>{t('app.title')}</span>
+                    <span className="text-sm" style={{ color: textSecondary }}> {t('app.subtitle')}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm" style={{ color: accentColor }}>{t('app.title')}</span>
-                  <span className="text-sm" style={{ color: textSecondary }}> {t('app.subtitle')}</span>
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  {/* Keyboard shortcuts hint */}
+                  <div className="hidden lg:flex items-center gap-2 text-xs" style={{ color: textSecondary }}>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘K</span>
+                    <span>{t('footer.search')}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘B</span>
+                    <span>Sidebar</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘E</span>
+                    <span>Export</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘H</span>
+                    <span>{t('footer.hide')}</span>
+                  </div>
+                  
+                  <p className="text-xs text-center md:text-right" style={{ color: textMuted }}>
+                    {t('footer.disclaimer')}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                {/* Keyboard shortcuts hint */}
-                <div className="hidden lg:flex items-center gap-2 text-xs" style={{ color: textSecondary }}>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘K</span>
-                  <span>{t('footer.search')}</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘E</span>
-                  <span>Export</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘U</span>
-                  <span>Upload</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ backgroundColor: borderColor }}>⌘H</span>
-                  <span>{t('footer.hide')}</span>
-                </div>
-                
-                <p className="text-xs" style={{ color: textMuted }}>
-                  {t('footer.disclaimer')}
-                </p>
-              </div>
             </div>
-            <div className="mt-4 pt-4 text-center" style={{ borderTop: `1px solid ${borderColor}` }}>
-              <p className="text-xs" style={{ color: textMuted }}>
-                © 2025 <a href="https://github.com/Linaqruf" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: textSecondary }}>Linaqruf</a>. Licensed under Apache 2.0
-              </p>
-            </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
 
       {/* Modals */}
@@ -375,19 +477,9 @@ function App() {
         cancelText={t('common.dataCleared') === 'Data dihapus' ? 'Batal' : 'Cancel'}
         variant="danger"
       />
-      
-      {/* Bottom Navigation - Mobile Only */}
-      <BottomNav 
-        isHidden={isHidden}
-        onToggleHidden={() => setIsHidden(!isHidden)}
-        onOpenExport={() => setExportModalOpen(true)}
-        onOpenUpload={() => setUploadModalOpen(true)}
-        onClear={handleClearDataClick}
-      />
 
       {/* Back to Top Button */}
       <BackToTop />
-
     </div>
   );
 }
