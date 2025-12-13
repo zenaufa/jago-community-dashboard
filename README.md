@@ -23,12 +23,18 @@ A modern, responsive financial transaction dashboard built for **Jago Bank** use
 - **Period Comparison** - Compare any two months side by side
 - **Savings Rate** - Calculate your savings percentage automatically
 
+### Navigation & UI
+- **Responsive Sidebar** - Collapsible sidebar on desktop (260px expanded, 72px collapsed)
+- **Mobile Menu** - Slide-in hamburger menu optimized for touch devices
+- **Streamlined Header** - Search-focused design with filter badge
+- **Persistent State** - Sidebar collapse preference saved to localStorage
+
 ### Tools
 - **Privacy Mode** - Hide all monetary values with one click
 - **Export** - Export to CSV, PDF report, or PNG image for social media
 - **Custom Categories** - Create rules to auto-categorize transactions
-- **Responsive Design** - Works on desktop and mobile
-- **Keyboard Shortcuts** - `Ctrl+K` Search, `Ctrl+U` Upload, `Ctrl+E` Export, `Ctrl+H` Hide values
+- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- **Keyboard Shortcuts** - `⌘K` Search, `⌘U` Upload, `⌘E` Export, `⌘H` Hide values, `⌘B` Toggle sidebar
 
 ---
 
@@ -110,7 +116,7 @@ bun run preview # or: npm run preview
 src/
 ├── components/
 │   ├── ui/              # Reusable UI components
-│   ├── layout/          # Header, BottomNav
+│   ├── layout/          # Sidebar, MobileMenu, Header
 │   ├── analytics/       # PeriodComparison
 │   ├── export/          # ShareableCard for PNG export
 │   └── modals/          # Export, Upload, CategoryRules, etc.

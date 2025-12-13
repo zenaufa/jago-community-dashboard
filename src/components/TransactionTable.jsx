@@ -41,6 +41,8 @@ export function TransactionTable({ transactions, isHidden }) {
   const tableContainerRef = useRef(null);
   const rowRefs = useRef([]);
   const searchInputRef = useRef(null);
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
   
   const { isDark } = useTheme();
   const { t, language } = useLanguage();
@@ -553,7 +555,42 @@ export function TransactionTable({ transactions, isHidden }) {
                         outline: isFocused ? `2px solid ${accentColor}` : 'none',
                         outlineOffset: '-2px',
                       }}
-                      onClick={() => setSelectedTransaction(tx)}
+                      onTouchStart={(e) => {
+                        touchStartRef.current = {
+                          x: e.touches[0].clientX,
+                          y: e.touches[0].clientY,
+                          time: Date.now()
+                        };
+                      }}
+                      onTouchEnd={(e) => {
+                        if (!touchStartRef.current) return;
+                        
+                        touchEndRef.current = {
+                          x: e.changedTouches[0].clientX,
+                          y: e.changedTouches[0].clientY,
+                          time: Date.now()
+                        };
+                        
+                        // Calculate distance moved
+                        const deltaX = Math.abs(touchEndRef.current.x - touchStartRef.current.x);
+                        const deltaY = Math.abs(touchEndRef.current.y - touchStartRef.current.y);
+                        const deltaTime = touchEndRef.current.time - touchStartRef.current.time;
+                        
+                        // Only trigger if it's a tap (not a scroll)
+                        // Threshold: less than 10px movement and less than 300ms
+                        if (deltaX < 10 && deltaY < 10 && deltaTime < 300) {
+                          setSelectedTransaction(tx);
+                        }
+                        
+                        touchStartRef.current = null;
+                        touchEndRef.current = null;
+                      }}
+                      onClick={(e) => {
+                        // Only handle clicks on non-touch devices
+                        if (!isMobile) {
+                          setSelectedTransaction(tx);
+                        }
+                      }}
                       onFocus={() => setFocusedRowIndex(index)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
