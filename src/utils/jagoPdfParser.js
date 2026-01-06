@@ -35,7 +35,9 @@ const REVERSAL_RE = /\b(reversal|pembatalan)\b/i;
 const DATE_RANGE_RE = /^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\s*-\s*\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\b/i;
 
 // Known transaction detail phrases (sorted by length, longest first)
+// Supports both Indonesian and English PDFs
 const DETAIL_PHRASES = [
+  // Indonesian phrases
   'Pembayaran dengan Jago Pay',
   'Pembayaran Produk Digital',
   'Isi Saldo Dompet Digital',
@@ -49,6 +51,16 @@ const DETAIL_PHRASES = [
   'Reversal POS',
   'Pajak Bunga',
   'Bunga',
+  // English phrases
+  'Payment with Jago Pay',
+  'Digital Product Payment',
+  'Top Up Wallet',
+  'Pocket Money In',
+  'Pocket Money Out',
+  'QRIS Payment',
+  'POS Transaction',
+  'Incoming Transfer',
+  'Outgoing Transfer',
 ].sort((a, b) => b.length - a.length);
 
 // ============================================================================
@@ -136,21 +148,23 @@ function parseTimePrefix(text) {
 
 /**
  * Check if a line should be skipped (headers, footers, noise)
+ * Supports both Indonesian and English PDFs
  */
 function shouldSkipLine(line) {
   const low = line.toLowerCase().trim();
   if (!low) return true;
   if (low.includes('pockets transactions history')) return true;
-  if (low.startsWith('halaman ')) return true;
+  if (low.startsWith('halaman ') || low.startsWith('page ')) return true;
   if (low.includes('pt bank jago')) return true;
   if (low.includes('www.jago.com')) return true;
-  if (low.includes('menampilkan transaksi')) return true;
-  if (low.startsWith('tanggal & waktu')) return true;
-  if (low.startsWith('saldo terbaru')) return true;
-  if (low.includes('info penting')) return true;
-  if (low.includes('dokumen ini adalah')) return true;
-  // Skip column headers
-  if (low.includes('sumber/tujuan') && low.includes('rincian')) return true;
+  if (low.includes('menampilkan transaksi') || low.includes('showing transactions')) return true;
+  if (low.startsWith('tanggal & waktu') || low.startsWith('date & time')) return true;
+  if (low.startsWith('saldo terbaru') || low.startsWith('latest balance')) return true;
+  if (low.includes('info penting') || low.includes('important info')) return true;
+  if (low.includes('dokumen ini adalah') || low.includes('this document is')) return true;
+  // Skip column headers (Indonesian and English)
+  if ((low.includes('sumber/tujuan') || low.includes('source/destination')) && 
+      (low.includes('rincian') || low.includes('transaction details'))) return true;
   return false;
 }
 
