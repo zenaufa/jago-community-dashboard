@@ -1,21 +1,20 @@
-# Use a lightweight Node image
-FROM node:18-alpine
+# Use Node image
+FROM node:22-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the application code
+# Copy all files
 COPY . .
 
-# Build the app (if applicable, otherwise it might just run)
-RUN npm run build --if-present
+RUN sed -i 's/export default defineConfig({/export default defineConfig({\n  server: { allowedHosts: true },/' vite.config.*
 
-# Expose the port (Check package.json for the actual port, usually 3000 or 8080)
-EXPOSE 3000
+# Expose the Vite port
+EXPOSE 5173
 
-# Start the application
-CMD ["npm", "run", "build"]
+# Run in dev mode and force it to accept outside connections
+# The "--" passes the argument to the underlying script
+CMD ["npm", "run", "dev", "--", "--host", "--allowed-hosts", "all"]
