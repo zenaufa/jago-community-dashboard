@@ -1,16 +1,21 @@
-FROM oven/bun:1 AS builder
+# Use a lightweight Node image
+FROM node:18-alpine
+
+# Set working directory
 WORKDIR /app
-COPY package.json ./
-RUN bun install
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of the application code
 COPY . .
-RUN find . -maxdepth 1 -name "vite.config.*" -exec sed -i 's|/jago-community-dashboard/|/|g' {} +
-RUN bun run build
 
-FROM nginx:alpine
+# Build the app (if applicable, otherwise it might just run)
+RUN npm run build --if-present
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Expose the port (Check package.json for the actual port, usually 3000 or 8080)
+EXPOSE 3000
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["npm", "run", "build"]
